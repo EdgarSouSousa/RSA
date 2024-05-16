@@ -1,6 +1,7 @@
 import os
 import time
 import gps
+import csv
 import iperf3
 import pandas as pd
 from datetime import datetime
@@ -17,21 +18,49 @@ def get_gps_data():
         print("Error:", e)
     return None, None
 
-def run_iperf_test(server, port=5201, protocol='tcp', duration=10):
-    client = iperf3.Client()
-    client.server_hostname = server
-    client.port = port
-    client.protocol = protocol
-    client.duration = duration
-    result = client.run()
-    if result.error:
-        print("Error:", result.error)
-        return None
-    else:
-        return result.sent_Mbps, result.received_Mbps
+def run_iperf_test(server_ip,duration,output_file,measurements,interval):
+    with open(output_file, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(['Measurement', 'Timestamp', 'Throughput (Mbps)'])
+
+        # Run iperf measurements at intervals
+        for measurement in range(1, measurements + 1):
+            print(f"Starting measurement {measurement}...")
+            
+            # Initialize the iperf client
+            client = iperf3.Client()
+
+            # Set server
+            client.server_hostname = server_ip
+
+            # Set duration
+            client.duration = duration
+
+            print(f"Running iperf measurement for {duration} seconds...")
+            start_time = time.time()
+            
+            # Run iperf measurement
+            result = client.run()
+            if result.error:
+                print(result.error)
+            else:
+                throughput_mbps = result.sent_Mbps
+                current_time = time.time()
+                writer.writerow([measurement, current_time, throughput_mbps])
+                print(f"Measurement {measurement}: Throughput: {throughput_mbps} Mbps")
+            
+            # Wait for the next interval
+            if measurement < measurements:
+                print(f"Waiting {interval} seconds for next measurement...")
+                time.sleep(interval)
+        # i need to cl
 
 def main():
     output_file = "network_quality_data.csv"
+    server_ip = "192.168.39.115"
+    interval = 5  
+    duration = 5  
+    measurements = 5
 
     if os.path.exists(output_file):
         df = pd.read_csv(output_file)
@@ -41,7 +70,7 @@ def main():
     while True:
         lat, lon = get_gps_data()
         if lat is not None and lon is not None:
-            sent, received = run_iperf_test(server="your_server_ip")  # Replace with your server IP
+            sent, received = run_iperf_test(server_ip,duration,output_file,measurements,interval)  # Replace with your server IP
             if sent is not None and received is not None:
                 timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 data = {'Latitude': [lat], 'Longitude': [lon], 'Sent_Mbps': [sent], 'Received_Mbps': [received], 'Timestamp': [timestamp]}
