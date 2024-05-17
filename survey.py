@@ -37,9 +37,7 @@ def run_iperf_test(server_ip,duration,output_file,measurements,interval):
             client.duration = duration
 
             print(f"Running iperf measurement for {duration} seconds...")
-            start_time = time.time()
-            
-            # Run iperf measurement
+
             result = client.run()
             if result.error:
                 print(result.error)
@@ -53,7 +51,6 @@ def run_iperf_test(server_ip,duration,output_file,measurements,interval):
             if measurement < measurements:
                 print(f"Waiting {interval} seconds for next measurement...")
                 time.sleep(interval)
-        # i need to cl
 
 def main():
     output_file = "network_quality_data.csv"
@@ -70,7 +67,7 @@ def main():
     while True:
         lat, lon = get_gps_data()
         if lat is not None and lon is not None:
-            sent, received = run_iperf_test(server_ip,duration,output_file,measurements,interval)  # Replace with your server IP
+            sent, received = run_iperf_test(server_ip,duration,output_file,measurements,interval)
             if sent is not None and received is not None:
                 timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 data = {'Latitude': [lat], 'Longitude': [lon], 'Sent_Mbps': [sent], 'Received_Mbps': [received], 'Timestamp': [timestamp]}
@@ -81,7 +78,7 @@ def main():
                 print("Failed to perform iPerf test")
         else:
             print("Failed to get GPS data")
-        time.sleep(60)  # Wait for 1 minute before next iteration
+        time.sleep(60)
 
 if __name__ == "__main__":
     main()
