@@ -1,84 +1,79 @@
-import os
+import subprocess
+import csv
 import time
 import gps
-import csv
-import iperf3
-import pandas as pd
-from datetime import datetime
 
-def get_gps_data():
-    session = gps.gps("localhost", "2947")
-    session.stream(gps.WATCH_ENABLE | gps.WATCH_NEWSTYLE)
-    try:
+def scan_wifi_networks():
+    # Run the `nmcli` command to scan for Wi-Fi networks
+    result = subprocess.run(['nmcli', '-t', '-f', 'SSID,SIGNAL', 'device', 'wifi', 'list'], capture_output=True, text=True)
+
+    # Check if the command was successful
+    if result.returncode != 0:
+        print(f"Error scanning Wi-Fi networks: {result.stderr}")
+        return []
+
+    # Parse the output into a list of networks
+    networks = []
+    for line in result.stdout.strip().split('\n'):
+        if ':' in line:
+            ssid, signal = line.split(':')
+            networks.append({'SSID': ssid, 'Signal': int(signal)})
+
+    return networks
+
+def get_gps_location():
+    # Connect to the GPS daemon
+    session = gps.gps(mode=gps.WATCH_ENABLE)
+    report = session.next()
+    
+    # Wait for a valid position fix
+    while report['class'] != 'TPV' or report.mode < 2:
         report = session.next()
-        if report['class'] == 'TPV':
-            if hasattr(report, 'lat') and hasattr(report, 'lon'):
-                return report.lat, report.lon
-    except Exception as e:
-        print("Error:", e)
-    return None, None
+    
+    latitude = report.lat
+    longitude = report.lon
+    return latitude, longitude
 
-def run_iperf_test(server_ip,duration,output_file,measurements,interval):
+def save_to_csv(data, output_file):
+    # Save the networks and GPS information to a CSV file
     with open(output_file, mode='w', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow(['Measurement', 'Timestamp', 'Throughput (Mbps)'])
-
-        # Run iperf measurements at intervals
-        for measurement in range(1, measurements + 1):
-            print(f"Starting measurement {measurement}...")
-            
-            # Initialize the iperf client
-            client = iperf3.Client()
-
-            # Set server
-            client.server_hostname = server_ip
-
-            # Set duration
-            client.duration = duration
-
-            print(f"Running iperf measurement for {duration} seconds...")
-
-            result = client.run()
-            if result.error:
-                print(result.error)
-            else:
-                throughput_mbps = result.sent_Mbps
-                current_time = time.time()
-                writer.writerow([measurement, current_time, throughput_mbps])
-                print(f"Measurement {measurement}: Throughput: {throughput_mbps} Mbps")
-            
-            # Wait for the next interval
-            if measurement < measurements:
-                print(f"Waiting {interval} seconds for next measurement...")
-                time.sleep(interval)
+        writer.writerow(['SSID', 'Signal', 'Latitude', 'Longitude'])
+        for entry in data:
+            writer.writerow([entry['SSID'], entry['Signal'], entry['Latitude'], entry['Longitude']])
 
 def main():
-    output_file = "network_quality_data.csv"
-    server_ip = "192.168.39.115"
-    interval = 5  
-    duration = 5  
-    measurements = 5
+    interval = 5  # seconds
+    duration = 30  # seconds
+    output_file = "wifi_signal_quality_with_gps.csv"
 
-    if os.path.exists(output_file):
-        df = pd.read_csv(output_file)
-    else:
-        df = pd.DataFrame(columns=['Latitude', 'Longitude', 'Sent_Mbps', 'Received_Mbps', 'Timestamp'])
+    end_time = time.time() + duration
+    data = []
 
-    while True:
-        lat, lon = get_gps_data()
-        if lat is not None and lon is not None:
-            sent, received = run_iperf_test(server_ip,duration,output_file,measurements,interval)
-            if sent is not None and received is not None:
-                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                data = {'Latitude': [lat], 'Longitude': [lon], 'Sent_Mbps': [sent], 'Received_Mbps': [received], 'Timestamp': [timestamp]}
-                df = df.append(pd.DataFrame(data), ignore_index=True)
-                df.to_csv(output_file, index=False)
-                print("Data saved:", lat, lon, sent, received, timestamp)
-            else:
-                print("Failed to perform iPerf test")
+    while time.time() < end_time:
+        print("Scanning for Wi-Fi networks...")
+        networks = scan_wifi_networks()
+        if networks:
+            print(f"Found {len(networks)} networks:")
+            for network in networks:
+                print(f"SSID: {network['SSID']}, Signal: {network['Signal']}%")
+            
+            latitude, longitude = get_gps_location()
+            print(f"Current Location: Latitude {latitude}, Longitude {longitude}")
+
+            for network in networks:
+                data.append({
+                    'SSID': network['SSID'],
+                    'Signal': network['Signal'],
+                    'Latitude': latitude,
+                    'Longitude': longitude
+                })
         else:
-            print("Failed to get GPS data")
-        time.sleep(60)
+            print("No networks found.")
+        
+        time.sleep(interval)
+
+    save_to_csv(data, output_file)
 
 if __name__ == "__main__":
     main()
