@@ -1,7 +1,7 @@
 import subprocess
 import csv
 import time
-import gps
+import gpsd
 
 def scan_wifi_networks():
     # Run the `nmcli` command to scan for Wi-Fi networks
@@ -22,16 +22,9 @@ def scan_wifi_networks():
     return networks
 
 def get_gps_location():
-    # Connect to the GPS daemon
-    session = gps.gps(mode=gps.WATCH_ENABLE)
-    report = session.next()
-    
-    # Wait for a valid position fix
-    while report['class'] != 'TPV' or report.mode < 2:
-        report = session.next()
-    
-    latitude = report.lat
-    longitude = report.lon
+    packet = gpsd.get_current()
+    latitude = packet.lat
+    longitude = packet.lon
     return latitude, longitude
 
 def save_to_csv(data, output_file):
@@ -43,6 +36,8 @@ def save_to_csv(data, output_file):
             writer.writerow([entry['SSID'], entry['Signal'], entry['Latitude'], entry['Longitude']])
 
 def main():
+    # Connect to the local gpsd
+    gpsd.connect()
     interval = 5  # seconds
     duration = 30  # seconds
     output_file = "wifi_signal_quality_with_gps.csv"
