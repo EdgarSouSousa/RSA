@@ -39,7 +39,7 @@ def main():
     # Connect to the local gpsd
     gpsd.connect()
     interval = 5  # seconds
-    duration = 30  # seconds
+    duration = 450  # seconds
     output_file = "wifi_signal_quality_with_gps.csv"
 
     end_time = time.time() + duration
