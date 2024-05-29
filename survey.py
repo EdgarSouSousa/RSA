@@ -2,6 +2,7 @@ import subprocess
 import csv
 import time
 import gpsd
+from geopy.distance import geodesic
 
 def scan_wifi_networks():
     # Run the `nmcli` command to scan for Wi-Fi networks
@@ -34,41 +35,58 @@ def save_to_csv(data, output_file):
         writer.writerow(['SSID', 'Signal', 'Latitude', 'Longitude'])
         for entry in data:
             writer.writerow([entry['SSID'], entry['Signal'], entry['Latitude'], entry['Longitude']])
+            
+def is_whitin_area(current_location,center_location,radius):
+    distance = geodesic(current_location, center_location).meters
+    return distance <= radius
 
 def main():
     # Connect to the local gpsd
     gpsd.connect()
+    center_location = (40.634561925146194, -8.659231214846358) # Entre o IT e o DEM
+    radius = 100  # meters
     interval = 5  # seconds
     duration = 450  # seconds
     output_file = "wifi_signal_quality_with_gps.csv"
-
-    end_time = time.time() + duration
+    
     data = []
+    in_area = False
+    end_time = time.time() + duration
+
 
     while time.time() < end_time:
-        print("Scanning for Wi-Fi networks...")
-        networks = scan_wifi_networks()
-        if networks:
-            print(f"Found {len(networks)} networks:")
-            for network in networks:
-                print(f"SSID: {network['SSID']}, Signal: {network['Signal']}%")
+        current_location = get_gps_location()
+        if is_whitin_area(current_location,center_location,radius):
+            if not in_area:
+                print("You entered the area, Starting Scan...!")
+                in_area = True
+            networks = scan_wifi_networks()
+            if networks:
+                print(f"Found {len(networks)} networks:")
+                for network in networks:
+                    print(f"SSID: {network['SSID']}, Signal: {network['Signal']}%")
             
-            latitude, longitude = get_gps_location()
-            print(f"Current Location: Latitude {latitude}, Longitude {longitude}")
+                latitude, longitude = current_location
+                print(f"Current Location: Latitude {latitude}, Longitude {longitude}")
 
-            for network in networks:
-                data.append({
-                    'SSID': network['SSID'],
-                    'Signal': network['Signal'],
-                    'Latitude': latitude,
-                    'Longitude': longitude
-                })
+                for network in networks:
+                    data.append({
+                        'SSID': network['SSID'],
+                        'Signal': network['Signal'],
+                        'Latitude': latitude,
+                        'Longitude': longitude
+                    })
+            else:
+                print("No networks found.")
+            time.sleep(interval)
         else:
-            print("No networks found.")
+            if in_area:
+                print("You left the area, Stopping Scan...!")
+                in_area = False
         
-        time.sleep(interval)
-
-    save_to_csv(data, output_file)
+            time.sleep(interval)
+    if data:
+        save_to_csv(data, output_file)
 
 if __name__ == "__main__":
     main()
