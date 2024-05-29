@@ -1,0 +1,4 @@
+folium==0.16.0
+gpsd_py3==0.3.0
+pandas==2.2.2
+Shapely==2.0.4

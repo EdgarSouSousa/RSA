@@ -16,12 +16,12 @@ def filter_and_select(data, ssid):
     return filtered_data
 
 # Specify the SSID you want to filter for
-desired_ssid = 'eduroam'
+desired_ssid = 'Kiosk-SAS'
 
 # Call the function to filter and select data
 filtered_data = filter_and_select(df, desired_ssid)
 
 # Write the filtered data to a CSV file
-filtered_data.to_csv('data.csv', index=False)
+filtered_data.to_csv('data2.csv', index=False)
 
 print("Filtered data saved to data.csv")
