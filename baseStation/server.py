@@ -1,7 +1,7 @@
 import socket
 import os
 
-def start_server(host='0.0.0.0', port=12345, save_directory='/home/nap/Documents/baseStation'):
+def start_server(host='0.0.0.0', port=12345, save_directory='/home/guilherme/Uni/RSA/heatmaps'):
     # Ensure the save directory exists
     os.makedirs(save_directory, exist_ok=True)
 

@@ -6,8 +6,7 @@ import csv
 from folium.plugins import HeatMap
 
 # List of SSIDs
-SSIDs = ['Davids Galaxy A32', 'Galaxy A52s 5G']  # List of Client SSID's
-Server_SSID = 'Kiosk-SAS'
+SSIDs = ['Client_1', 'Client_2']  # List of Client SSID's
 
 # Read data from CSV files
 networks = defaultdict(list)
@@ -55,6 +54,7 @@ for ssid, points in networks.items():
 
 # Save the map to an HTML file
 mymap.save('network_coverage_map.html')
+
 
 print("Map saved as 'network_coverage_map.html'.")
 

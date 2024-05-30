@@ -36,36 +36,35 @@ def save_to_csv(data, output_file):
         for entry in data:
             writer.writerow([entry['SSID'], entry['Signal'], entry['Latitude'], entry['Longitude']])
             
-def is_whitin_area(current_location,center_location,radius):
+def is_within_area(current_location, center_location, radius):
     distance = geodesic(current_location, center_location).meters
     return distance <= radius
 
 def main():
     # Connect to the local gpsd
+    print("Starting Survey...")
     gpsd.connect()
     center_location = (40.634561925146194, -8.659231214846358) # Entre o IT e o DEM
-    radius = 100  # meters
+    radius = 1000  # meters
     interval = 5  # seconds
-    duration = 450  # seconds
     output_file = "wifi_signal_quality_with_gps.csv"
     
     data = []
     in_area = False
-    end_time = time.time() + duration
 
-
-    while time.time() < end_time:
+    while True:
         current_location = get_gps_location()
-        if is_whitin_area(current_location,center_location,radius):
+        if is_within_area(current_location, center_location, radius):
             if not in_area:
                 print("You entered the area, Starting Scan...!")
                 in_area = True
+            
             networks = scan_wifi_networks()
             if networks:
                 print(f"Found {len(networks)} networks:")
                 for network in networks:
                     print(f"SSID: {network['SSID']}, Signal: {network['Signal']}%")
-            
+                
                 latitude, longitude = current_location
                 print(f"Current Location: Latitude {latitude}, Longitude {longitude}")
 
@@ -78,15 +77,18 @@ def main():
                     })
             else:
                 print("No networks found.")
+            
             time.sleep(interval)
         else:
             if in_area:
                 print("You left the area, Stopping Scan...!")
                 in_area = False
+
+                if data:
+                    save_to_csv(data, output_file)
+                    data = []  # Clear data after saving
         
             time.sleep(interval)
-    if data:
-        save_to_csv(data, output_file)
 
 if __name__ == "__main__":
     main()
