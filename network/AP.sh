@@ -16,12 +16,12 @@ sudo nmcli connection modify "$CONNECTION_NAME" 802-11-wireless.mode ap 802-11-w
 # Enable IP forwarding
 sudo sysctl net.ipv4.ip_forward=1
 
+# Enable NAT
+sudo iptables -t nat -A POSTROUTING -o "$ETH_INTERFACE" -j MASQUERADE
+
+# Forward traffic from hotspot to Ethernet
+sudo iptables -A FORWARD -i "$WLAN_INTERFACE" -o "$ETH_INTERFACE" -j ACCEPT
+sudo iptables -A FORWARD -i "$ETH_INTERFACE" -o "$WLAN_INTERFACE" -m state --state RELATED,ESTABLISHED -j ACCEPT
+
 # Activate the hotspot
 sudo nmcli connection up "$CONNECTION_NAME"
-
-sudo /iptables.sh wlp1s0 enx00e04c720855
-
-sudo /iptables.sh enx00e04c720855 wlan0
-
-
-
