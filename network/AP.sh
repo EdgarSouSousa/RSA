@@ -1,17 +1,15 @@
 #!/bin/bash
 
 # Define variables
-CONNECTION_NAME="RASPIAPCON"
+CONNECTION_NAME="RASPIAP"
 SSID="RASPIAP"
 PASSWORD="edgarsousa"
-ETH_INTERFACE="enp2s0f2"
-WLAN_INTERFACE=$(nmcli device | grep wlan | awk '{print $1}')
+ETH_INTERFACE="enx00e04c720855"
+WLAN_INTERFACE="wlp1s0"
+IP_RANGE="192.168.4.0/24"
 
-# Create hotspot connection
-sudo nmcli connection add type wifi ifname "$WLAN_INTERFACE" con-name "$CONNECTION_NAME" autoconnect no ssid "$SSID" password "$PASSWORD"
-
-# Assign IP address to the Wi-Fi interface
-sudo nmcli connection modify "$CONNECTION_NAME" 802-11-wireless.mode ap 802-11-wireless.band bg ipv4.method shared
+# Create hotspot connection with custom IP range
+sudo nmcli connection add type wifi ifname "$WLAN_INTERFACE" con-name "$CONNECTION_NAME" autoconnect no ssid "$SSID" password "$PASSWORD" 802-11-wireless.mode ap ipv4.method shared ipv4.addresses "$IP_RANGE"
 
 # Enable IP forwarding
 sudo sysctl net.ipv4.ip_forward=1
