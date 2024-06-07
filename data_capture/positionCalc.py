@@ -58,3 +58,17 @@ mymap.save('network_coverage_map.html')
 
 print("Map saved as 'network_coverage_map.html'.")
 
+# # Pseudocode to determine the best position for the relay node
+
+# # Step 1: Initialize Variables
+# base_station_x = <BaseStationLongitude>
+# base_station_y = <BaseStationLatitude>
+# best_point_x = <BestPointLongitude>
+# best_point_y = <BestPointLatitude>
+
+# # Step 2: Calculate Midpoint
+# relay_node_x = (base_station_x + best_point_x) / 2
+# relay_node_y = (base_station_y + best_point_y) / 2
+
+# # Step 3: Output Midpoint
+# output("Optimal Position for Relay Node: (" + relay_node_x + ", " + relay_node_y + ")")
