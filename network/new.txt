@@ -1,5 +1,5 @@
 sudo echo 1 > /proc/sys/net/ipv4/ip_forward
-sudo ./iptables.sh wlp3s0 enp2s0f2
-sudo ./iptables.sh enp2s0f2 wlp3s0
+sudo ./iptables.sh
+
 
 
