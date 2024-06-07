@@ -28,4 +28,4 @@ def send_file(filename, server_ip, server_port=12345):
     client_socket.close()
 
 if __name__ == "__main__":
-    send_file('/home/guilherme/Uni/RSA/heatmaps/network_quality_heatmap_DIRECT-epson-026d-0-001.html', '192.168.3.11') #  TODO Change the path to the heatmap file
+    send_file('/home/guilherme/Uni/RSA/heatmaps/network_quality_heatmap_DIRECT-epson-026d-0-001.html', '10.1.1.16')

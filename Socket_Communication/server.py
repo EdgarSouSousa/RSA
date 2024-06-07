@@ -1,7 +1,7 @@
 import socket
 import os
 
-def start_server(host='0.0.0.0', port=12345, save_directory='/home/guilherme/Uni/RSA/heatmaps'):
+def start_server(host='0.0.0.0', port=12345, save_directory='/home/nap/Desktop/RSA/'):
     # Ensure the save directory exists
     os.makedirs(save_directory, exist_ok=True)
 
@@ -20,7 +20,7 @@ def start_server(host='0.0.0.0', port=12345, save_directory='/home/guilherme/Uni
             client_socket.close()
             continue
 
-        # Use pipe ('|') as the delimiter for metadata
+        # Use pipe ('|') as the delimiter for metadata podes usar outro mostardinha dependendo do que queres mandar
         try:
             filename, file_size = metadata.split('|')
             filename = os.path.join(save_directory, filename)
